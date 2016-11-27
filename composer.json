@@ -1,0 +1,7 @@
+{
+    "name": "fishfin/valigator",
+    "description": "Stand-alone PHP Class for Data Sanitization and Validation",
+    "require": {
+        "php": "^5.5 || ^7.0"
+    }
+}
