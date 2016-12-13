@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.0
+ * @version     1.0.2
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,6 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
+    const VERSION = '1.0.2';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -2090,6 +2091,22 @@ class Valigator
     protected function validate_url($value, $args = NULL)
     {
         return (filter_var($value, FILTER_VALIDATE_URL) !== FALSE);
+    }
+
+    /**
+     * Determine if a URL exists & is accessible.
+     *
+     * Usage: '<index>' => 'url_exists'
+     *
+     * @param string $field
+     * @param array  $input
+     * @param null   $args
+     *
+     * @return mixed
+     */
+    public function version()
+    {
+        return self::VERSION;
     }
 
     /**
