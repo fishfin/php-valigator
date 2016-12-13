@@ -1204,7 +1204,7 @@ class Valigator
                         if ($errorMsg != '') {
                             $this->_validationErrorLog[] = [
                                 'args' => $args,
-                                'errormsg' => $errorMsg,
+                                'errormsg' => $errorMsg . (substr($errorMsg, -1) === '.' ?  '' : '.'),
                                 'field' => $field,
                                 'filter' => $filter,
                                 'value' => (string) $fieldValue, //$this->_getFieldValueFromInput($field, $input),
