@@ -242,10 +242,9 @@ If you are a programmer, you will know what to expect in positional arguments. T
 Validation filters emit default error messages if data does not match the filter. If you don't like the default messages, make your own! After arguments, put a ';' and start your custom error message, with single or double quotes.
 ```
 'filter1:arg1,arg2;"My very own validation error message!"'
-'filter2:;\'And I\'ll change this one\'s too!\''
+'filter2;\'And I\'ll change this one\'s too!\''
 ```
-Notice how filter2 had no arguments, but ':;' was required. Oh well...
-If the error message itself doesn't contain any special characters, like the single or double quotes, ':' or ';', why, you may not even put the wrapping quotes!
+Notice how filter2 had no arguments, so ':' was not required. If the error message itself doesn't contain any special characters, like the single or double quotes, ':' or ';', why, you may not even put the wrapping quotes!
 #### Custom Error Messages with Special Tags
 If you liked the custom error message, you will like this even better. `{field}`, `{value}`, `{filter}`, `{args}`, `{arg1}` ... `{argn}` are all special tags in validation error messages.  
 ```
