@@ -26,6 +26,7 @@ class Valigator
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
     const FIELDS_AND_HTML_ERRORMSGS = 3;
+    const FORCE_FULLSTOP_TO_ERRORMSGS = FALSE;
 
     // map options passed to functions(parameters) to be called internally
     protected $_aliases = [
@@ -1204,7 +1205,10 @@ class Valigator
                         if ($errorMsg != '') {
                             $this->_validationErrorLog[] = [
                                 'args' => $args,
-                                'errormsg' => $errorMsg . (substr($errorMsg, -1) === '.' ?  '' : '.'),
+                                'errormsg' => $errorMsg
+                                    . (substr($errorMsg, -1) !== '.'
+                                       && self::FORCE_FULLSTOP_TO_ERRORMSGS
+                                       ?  '.' : ''),
                                 'field' => $field,
                                 'filter' => $filter,
                                 'value' => (string) $fieldValue, //$this->_getFieldValueFromInput($field, $input),
