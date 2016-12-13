@@ -1127,42 +1127,30 @@ class Valigator
 
                 $validationErrorMsg = array();
 
-                if ($filterSynonym == 'required') {
-                    $method = "validate_{$filterSynonym}";
-                    //$value = array_key_exists($field, $input) ? $fieldValue : '';
-                    $validationPassed = $this->$method($fieldValue, $argsSynonyms);
-                    if (!$validationPassed) {
-                        $validationErrorMsg[] = $fieldFilter['errormsg'];
-                        $validationErrorMsg[] =
-                                $this->_getValidationErrorMsg($filter);
-                    }
-                } else if ($fieldValue !== NULL) {
-                    switch (TRUE) {
-                        case (isset($this->_customValidations[$filter]['callback'])):
-                            $validationPassed = call_user_func(
-                                    $this->_customValidations[$filter]['callback']
-                                    , $fieldValue, $argsSynonyms);
-                            if (!$validationPassed) {
-                                $validationErrorMsg[] = $fieldFilter['errormsg'];
-                                $validationErrorMsg[] = $this->_customValidations[$filter]['errormsg'];
-                                $validationErrorMsg[] = $this->_factoryValidationErrorMsgs['default_long'];
-                            }
-                            break;
-                        case (is_callable(array($this, $method = "validate_{$filter}"))
-                              || is_callable(array($this, $method = "validate_{$filterSynonym}"))):
-                            //$method = "validate_{$filter}";
-                            $validationPassed = $this->$method($fieldValue, $argsSynonyms);
-                            if (!$validationPassed) {
-                                $validationErrorMsg[] = $fieldFilter['errormsg'];
-                                $validationErrorMsg[] =
-                                        $this->_getValidationErrorMsg($filter);
-                            }
-                            break;
-                        default:
-                            $validationPassed = FALSE;
+                switch (TRUE) {
+                    case (isset($this->_customValidations[$filter]['callback'])):
+                        $validationPassed = call_user_func(
+                                $this->_customValidations[$filter]['callback']
+                                , $fieldValue, $argsSynonyms);
+                        if (!$validationPassed) {
+                            $validationErrorMsg[] = $fieldFilter['errormsg'];
+                            $validationErrorMsg[] = $this->_customValidations[$filter]['errormsg'];
+                            $validationErrorMsg[] = $this->_factoryValidationErrorMsgs['default_long'];
+                        }
+                        break;
+                    case (is_callable(array($this, $method = "validate_{$filter}"))
+                          || is_callable(array($this, $method = "validate_{$filterSynonym}"))):
+                        $validationPassed = $this->$method($fieldValue, $argsSynonyms);
+                        if (!$validationPassed) {
+                            $validationErrorMsg[] = $fieldFilter['errormsg'];
                             $validationErrorMsg[] =
-                                    $this->_getValidationErrorMsg('inexistent_validation');
-                    }
+                                    $this->_getValidationErrorMsg($filter);
+                        }
+                        break;
+                    default:
+                        $validationPassed = FALSE;
+                        $validationErrorMsg[] =
+                                $this->_getValidationErrorMsg('inexistent_validation');
                 }
 
                 if (!$validationPassed) {
