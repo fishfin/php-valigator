@@ -85,6 +85,7 @@ class Valigator
         'creditcard' => '{field} does not contain a valid credit card number',
         'date' => '{field} is not a valid date',
         'email' => '{field} is not a valid email address',
+        'empty' => '{field} must be empty',
         'endswith' => '{field} does not end with {arg1}',
         'equalsfield' => '{field} does not equal {arg1}',
         'exactlen' => '{field} must be exactly {arg1} characters long',
@@ -105,7 +106,8 @@ class Valigator
         'minlen'=> '{field} must be {arg1} or longer in length',
         'minnumeric' => 'The {field} field needs to be a numeric value, equal to, or higher than {arg1}',
         'mismatch' => 'There is no validation rule for {field}',
-        'notinlist' => '{field} cannotbe one of these values {args}',
+        'notempty' => '{field} cannot be empty',
+        'notinlist' => '{field} cannot be one of these values {args}',
         'numeric' => '{field} may only contain numeric characters',
         'pass' => 'Placeholder text, will never be used as {filter} will never fail! :)',
         'personname' => '{field} does not seem to contain a person\'s name',
@@ -247,7 +249,6 @@ class Valigator
             }
 
             $this->_setFieldLabelAndHierarchy($field);
-
 
             $this->setSanitizations(
                     isset($fieldFilter['sanitizations'])
@@ -1530,6 +1531,22 @@ class Valigator
     }
 
     /**
+     * Check if the specified key is present and not empty.
+     *
+     * Usage: '<index>' => 'notempty'
+     *
+     * @param string $field
+     * @param array  $input
+     * @param null   $args
+     *
+     * @return mixed
+     */
+    protected function validate_empty($value, $args = NULL)
+    {
+        return empty($value);
+    }
+
+    /**
      * Determine if the provided value starts with param.
      *
      * Usage: '<index>' => 'starts,Z'
@@ -1879,6 +1896,22 @@ class Valigator
     }
 
     /**
+     * Check if the specified key is present and not empty.
+     *
+     * Usage: '<index>' => 'notempty'
+     *
+     * @param string $field
+     * @param array  $input
+     * @param null   $args
+     *
+     * @return mixed
+     */
+    protected function validate_notempty($value, $args = NULL)
+    {
+        return !empty($value);
+    }
+
+    /**
      * Verify that a value is NOT contained within the pre-defined value set.
      * OUTPUT: will NOT show the list of values.
      *
@@ -1999,7 +2032,7 @@ class Valigator
      */
     protected function validate_required($value, $args = NULL)
     {
-        return (!($value === NULL || $value == '' || empty($value)));
+        return !($value === NULL || $value === '');
     }
 
       /**
