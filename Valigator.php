@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.3
+ * @version     1.0.4
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.3';
+    const VERSION = '1.0.4';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -1121,30 +1121,43 @@ class Valigator
 
                 $validationErrorMsg = array();
 
-                switch (TRUE) {
-                    case (isset($this->_customValidations[$filter]['callback'])):
-                        $validationPassed = call_user_func(
-                                $this->_customValidations[$filter]['callback']
-                                , $fieldValue, $argsSynonyms);
-                        if (!$validationPassed) {
-                            $validationErrorMsg[] = $fieldFilter['errormsg'];
-                            $validationErrorMsg[] = $this->_customValidations[$filter]['errormsg'];
-                            $validationErrorMsg[] = $this->_factoryValidationErrorMsgs['default_long'];
-                        }
-                        break;
-                    case (is_callable(array($this, $method = "validate_{$filter}"))
-                          || is_callable(array($this, $method = "validate_{$filterSynonym}"))):
-                        $validationPassed = $this->$method($fieldValue, $argsSynonyms);
-                        if (!$validationPassed) {
-                            $validationErrorMsg[] = $fieldFilter['errormsg'];
-                            $validationErrorMsg[] =
-                                    $this->_getValidationErrorMsg($filter);
-                        }
-                        break;
-                    default:
-                        $validationPassed = FALSE;
+                if (in_array($method = $filter, ['required', 'notempty'])
+                    || in_array($method = $filterSynonym, ['required', 'notempty'])) {
+                    $method = "validate_{$method}";
+                    $validationPassed = $this->$method($fieldValue, $argsSynonyms);
+                    if (!$validationPassed) {
+                        $validationErrorMsg[] = $fieldFilter['errormsg'];
                         $validationErrorMsg[] =
-                                $this->_getValidationErrorMsg('inexistent_validation');
+                                $this->_getValidationErrorMsg($filter);
+                    }
+                } else if ($fieldValue === NULL) {
+                    $validationPassed = TRUE;
+                } else {
+                    switch (TRUE) {
+                        case (isset($this->_customValidations[$filter]['callback'])):
+                            $validationPassed = call_user_func(
+                                    $this->_customValidations[$filter]['callback']
+                                    , $fieldValue, $argsSynonyms);
+                            if (!$validationPassed) {
+                                $validationErrorMsg[] = $fieldFilter['errormsg'];
+                                $validationErrorMsg[] = $this->_customValidations[$filter]['errormsg'];
+                                $validationErrorMsg[] = $this->_factoryValidationErrorMsgs['default_long'];
+                            }
+                            break;
+                        case (is_callable(array($this, $method = "validate_{$filter}"))
+                              || is_callable(array($this, $method = "validate_{$filterSynonym}"))):
+                            $validationPassed = $this->$method($fieldValue, $argsSynonyms);
+                            if (!$validationPassed) {
+                                $validationErrorMsg[] = $fieldFilter['errormsg'];
+                                $validationErrorMsg[] =
+                                        $this->_getValidationErrorMsg($filter);
+                            }
+                            break;
+                        default:
+                            $validationPassed = FALSE;
+                            $validationErrorMsg[] =
+                                    $this->_getValidationErrorMsg('inexistent_validation');
+                    }
                 }
 
                 if (!$validationPassed) {
