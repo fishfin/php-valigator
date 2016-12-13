@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.2
+ * @version     1.0.3
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.2';
+    const VERSION = '1.0.3';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -1037,7 +1037,6 @@ class Valigator
 
                 if ($filterSynonym == 'default') {
                     $method = "sanitize_{$filterSynonym}";
-                    //$value = array_key_exists($field, $input) ? $fieldValue : '';
                     $fieldValue = &$this->_getFieldValueFromInput($field, $input, TRUE);
                     $fieldValue = $this->$method($fieldValue, $argsSynonyms);
                 } else if ($fieldValue !== NULL) {
@@ -1046,19 +1045,13 @@ class Valigator
                             $fieldValue = call_user_func($this->_customSanitizations[$filter]
                                     , $fieldValue, $argsSynonyms);
                             break;
-                        case (is_callable(array($this, "sanitize_{$filter}"))):
-                            $method = "sanitize_{$filter}";
+                        case (is_callable(array($this, $method = "sanitize_{$filter}"))
+                              || is_callable(array($this, $method = "sanitize_{$filterSynonym}"))):
                             $fieldValue = $this->$method($fieldValue, $argsSynonyms);
                             break;
-                        case (is_callable(array($this, "sanitize_{$filterSynonym}"))):
-                            $method = "sanitize_{$filterSynonym}";
-                            $fieldValue = $this->$method($fieldValue, $argsSynonyms);
-                            break;
-                        case (function_exists($filter)):
-                            $fieldValue = $filter($fieldValue);
-                            break;
-                        case (function_exists($filterSynonym)):
-                            $fieldValue = $filterSynonym($fieldValue);
+                        case (function_exists($phpFilter = $filter)
+                              || function_exists($phpFilter = $filterSynonym)):
+                            $fieldValue = $phpFilter($fieldValue);
                             break;
                         default:
                             throw new \Exception("Sanitization filter {$filter} does not exist.");
