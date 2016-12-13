@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.4
+ * @version     1.0.5
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.4';
+    const VERSION = '1.0.5';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -307,32 +307,33 @@ class Valigator
      * {'filter' => 'filterName', 'args' => {'arg1', 'arg2'}, 'errormsg' =>
      * 'Error Text'} to "filterName:arg1,arg2;'Error Text'"
      *
-     * @param array $fieldFilterArray
+     * @param array $fieldFiltersArray
      *
      * @return string
      */
-    private function _convertFieldFiltersArrayToString(array $fieldFilterArray)
+    private function _convertFieldFiltersArrayToString(array $fieldFiltersArray)
     {
-        $fieldFilterString = '';
+        $fieldFiltersString = '';
 
-        if (is_array($fieldFilterArray)) {
-            $fieldValidationsFlattened = array();
-            foreach ($fieldFilterArray as $fieldValidation) {
-                if (isset($fieldValidation['filter'])) {
-                    $fieldValidationsFlattened[] =
-                            $fieldValidation['filter'] . ':'
-                            . (isset($fieldValidation['args'])
-                                    ? implode(',', $fieldValidation['args'])
-                                    : '') . ';\''
-                            . (isset($fieldValidation['errormsg'])
-                                    ? $fieldValidation['errormsg']
-                                    : '') . '\'';                    
-                }
+        $fieldFilterFlattened = array();
+
+        foreach ($fieldFiltersArray as $fieldFilter) {
+            if (is_string($fieldFilter)) {
+                $fieldFilterFlattened[] = $fieldFilter;
+            } else if (isset($fieldFilter['filter'])) {
+                $fieldFilterFlattened[] =
+                        $fieldFilter['filter'] . ':'
+                        . (isset($fieldFilter['args'])
+                                ? implode(',', $fieldFilter['args'])
+                                : '') . ';\''
+                        . (isset($fieldFilter['errormsg'])
+                                ? $fieldFilter['errormsg']
+                                : '') . '\'';                    
             }
-            $fieldFilterString = implode('|', $fieldValidationsFlattened);
         }
+        $fieldFiltersString = implode('|', $fieldFilterFlattened);
 
-        return $fieldFilterString;
+        return $fieldFiltersString;
     }
 
     /**
@@ -348,16 +349,16 @@ class Valigator
      * "filterName:;'Error Text'" to {'filter' => 'filterName',
      * 'args' => {}, 'errormsg' => 'Error Text'}
      *
-     * @param string $fieldFilterString
+     * @param string $fieldFiltersString
      *
      * @return array
      *
      * @throws Exception if preg_match_all fails
      */
-    private function _convertFieldFiltersStringToArray(string $fieldFilterString
+    private function _convertFieldFiltersStringToArray(string $fieldFiltersString
             , bool $isValidation = TRUE)
     {
-        $fieldFilterArray = array();
+        $fieldFiltersArray = array();
         $filters = array();
 
         if (!preg_match_all('/'                     // group0: filter group
@@ -391,8 +392,8 @@ class Valigator
                 .   ')'
                 . ')'
                 . '/i',
-                $fieldFilterString, $filters, PREG_SET_ORDER)) {
-            throw new \Exception('Invalid filter encountered: ' . $fieldFilterString);
+                $fieldFiltersString, $filters, PREG_SET_ORDER)) {
+            throw new \Exception('Invalid filter encountered: ' . $fieldFiltersString);
         }
 
         foreach ($filters as $filter) {
@@ -407,11 +408,11 @@ class Valigator
                 if ($isValidation) {
                     $fieldFilter['errormsg'] = isset($filter['errormsg']) ? $filter['errormsg'] : '';
                 }
-                $fieldFilterArray[] = $fieldFilter;
+                $fieldFiltersArray[] = $fieldFilter;
             }
         }
 
-        return $fieldFilterArray;
+        return $fieldFiltersArray;
     }
 
     /**
@@ -904,12 +905,19 @@ class Valigator
     public function setSanitizations(array $fieldSanitizations
             , bool $mergeBefore = FALSE)
     {
-        foreach($fieldSanitizations as $field => $fieldFiltersString) {
+        foreach($fieldSanitizations as $field => $fieldFilters) {
 
             $this->_setFieldLabelAndHierarchy($field);
 
             if (!isset($this->_filters[$field]['sanitizations'])) {
                 $this->_filters[$field]['sanitizations'] = array();
+            }
+
+            if (is_array($fieldFilters)) {
+                $fieldFiltersString =
+                        $this->_convertFieldFiltersArrayToString($fieldFilters);
+            } else {
+                $fieldFiltersString = $fieldFilters;
             }
 
             $fieldFiltersArray =
@@ -934,12 +942,19 @@ class Valigator
      */
     public function setValidations(array $fieldValidations)
     {
-        foreach($fieldValidations as $field => $fieldFiltersString) {
+        foreach($fieldValidations as $field => $fieldFilters) {
 
             $this->_setFieldLabelAndHierarchy($field);
 
             if (!isset($this->_filters[$field]['validations'])) {
                 $this->_filters[$field]['validations'] = array();
+            }
+
+            if (is_array($fieldFilters)) {
+                $fieldFiltersString =
+                        $this->_convertFieldFiltersArrayToString($fieldFilters);
+            } else {
+                $fieldFiltersString = $fieldFilters;
             }
 
             $fieldFiltersArray =
