@@ -1205,7 +1205,7 @@ class Valigator
      */
     protected function sanitize_default($value, $args = NULL)
     {
-        return ($value === NULL || $value == '') ? $args[0] : $value;
+        return ($value === NULL || $value === '') ? $args[0] : $value;
     }
 
     /**
