@@ -948,6 +948,14 @@ class Valigator
             $this->_filters[$field]['validations'] =
                     array_merge_recursive($this->_filters[$field]['validations']
                             , $fieldFiltersArray);
+
+            // shifting 'required' and 'notempty' to beginning of validation
+            //foreach ($this->_filters[$field]['validations'] as $index => $fieldValidation) {
+            //    if (in_array($fieldValidation['filter'], ['required', 'notempty'])) {
+            //            unset($this->_filters[$field]['validations'][$index]);
+            //            array_unshift($this->_filters[$field]['validations'], $fieldValidation);
+            //    }
+            //}
         }
         
         return $this;
