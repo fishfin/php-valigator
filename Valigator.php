@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.5
+ * @version     1.0.1
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.5';
+    const VERSION = '1.0.1';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -368,6 +368,7 @@ class Valigator
                 . '(?:[\s\'"]*)'                    //                            no-capture: none or more spaces, single or double quotes
                                                     //     end parsing filter name
                 . '(?:$|\|'                         //                            no-capture: end-of-string or pipe (filter name with no args or message)
+
                 .   '|'                             //                            or
                                                     //     begin parsing arguments list
                 .   '(?::'                          //                            no-capture: colon (start of args)
@@ -375,21 +376,34 @@ class Valigator
                                                     //     end parsing arguments list
                 .     '(?:'                         //                            no-capture: followed by...
                 .       '(?:$|\|)'                  //                            no-capture: end-of-string or pipe (i.e. filter name with no message)
-                .       '|'                         //                            or
+                .       '|'                         // -error msg block begin-    or
                 .       '(?:;'                      //                            no-capture: semi-colon (end of args)
                                                     //     begin parsing custom error message
                 .         '(?:'                     //                            no-capture: followed by
                 .           '[\s]*'                 //                            no-capture: leading spaces
-                .           '(?P<quote>[\'"]?)'     // group3: begin-quote        capture   : none or more spaces, single or double quotes
-                .           '(?P<errormsg>.*?)'     // group4: custom error msg   capture   : none or more characters, lazy (stop at first match)
-                .           '\g{quote}'             //                            no-capture: same as start quote
+                .           '(?P<quote_a>[\'"]?)'   // group3: begin-quote        capture   : none or more spaces, single or double quotes
+                .           '(?P<errormsg_a>.*?)'   // group4: custom error msg   capture   : none or more characters, lazy (stop at first match)
+                .           '\g{quote_a}'           //                            no-capture: same as start quote
                 .           '[\s]*'                 //                            no-capture: trailing spaces
                 .           '(?:$|\|)'              // no-capture: end-of-string or pipe
                 .         ')'
                                                     //     end parsing custom error message
-                .       ')'
+                .       ')'                         // -error msg block end-
                 .     ')'
                 .   ')'
+
+                .   '|'                             // this block exactly same as -error msg block begin- ...
+                .   '(?:;'                          //
+                .     '(?:'                         //
+                .       '[\s]*'                     //
+                .       '(?P<quote_b>[\'"]?)'       //                             note: capture name changed
+                .       '(?P<errormsg_b>.*?)'       //                             note: capture name changed
+                .       '\g{quote_b}'               //                             note: capture name changed
+                .       '[\s]*'                     //
+                .       '(?:$|\|)'                  //
+                .     ')'                           //
+                .   ')'                             // ... till -error msg block end-
+
                 . ')'
                 . '/i',
                 $fieldFiltersString, $filters, PREG_SET_ORDER)) {
@@ -406,7 +420,9 @@ class Valigator
                     'args' => (isset($filter['args']) ? array_map('trim', explode(",", $filter['args'])) : array()),
                 ];
                 if ($isValidation) {
-                    $fieldFilter['errormsg'] = isset($filter['errormsg']) ? $filter['errormsg'] : '';
+                    $fieldFilter['errormsg'] =
+                            isset($filter['errormsg_b']) ? $filter['errormsg_b'] :
+                            (isset($filter['errormsg_a']) ? $filter['errormsg_a'] : '');
                 }
                 $fieldFiltersArray[] = $fieldFilter;
             }
