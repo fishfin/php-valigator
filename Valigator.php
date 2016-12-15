@@ -73,6 +73,9 @@ class Valigator
     // Delimiter for input field hierarchy
     protected $_fieldHierarchyDelimiter = '.';
 
+    // Delimiter for input field hierarchy
+    protected $_fieldLabelHierarchyDelimiter = ' in ';
+
     // Multibyte supported
     protected $_mbSupported = FALSE;
 
@@ -208,13 +211,13 @@ class Valigator
     {
         if (!isset($this->_filters[$field]['field'])
                 || !isset($this->_filters[$field]['parents'])) {
-            $hierarchy = explode($this->_fieldHierarchyDelimiter, $field);
-            $hierarchyMaxDepth = count($hierarchy) - 1;
+            $fieldHierarchy = explode($this->_fieldHierarchyDelimiter, $field);
+            $fieldHierarchyMaxDepth = count($fieldHierarchy) - 1;
             $parentHierarchy = array();
 
             $this->_filters[$field]['parents'] = array();
-            foreach ($hierarchy as $depth => $node) {
-                if ($depth == $hierarchyMaxDepth) {
+            foreach ($fieldHierarchy as $depth => $node) {
+                if ($depth == $fieldHierarchyMaxDepth) {
                     $this->_filters[$field]['field'] = $node;
                 } else {
                     $this->_filters[$field]['parents'][] = $node;
@@ -224,8 +227,18 @@ class Valigator
 
         if (!isset($this->_filters[$field]['label'])
             || $this->_filters[$field]['label'] == '') {
+
+            $showFieldHierarchy = (array)
+                    ($this->_fieldLabelHierarchyDelimiter === NULL
+                    ? $this->_filters[$field]['field']
+                    : array_reverse($fieldHierarchy));
+
             $this->_filters[$field]['label'] =
-                    $this->_convertVariableNameToUpperCaseWords($this->_filters[$field]['field']);
+                    implode ($this->_fieldLabelHierarchyDelimiter,
+                             array_map(function($string) {
+                                 return $this->_convertVariableNameToUpperCaseWords($string);
+                             }, $showFieldHierarchy)
+                            );
         }
     }
 
@@ -238,13 +251,15 @@ class Valigator
      * @return object
      */
     public function __construct(array $fieldsFilters = array()
-            , string $fieldHierarchyDelimiter = '.')
+            , string $fieldHierarchyDelimiter = '.'
+            , string $_fieldLabelHierarchyDelimiter = NULL)
     {
         $this->_mbSupported = function_exists('mb_detect_encoding');
         
         $this->_errormsgHTMLSpanAttr = $this->_emptyErrormsgHTMLSpanAttr;
 
         $this->_fieldHierarchyDelimiter = $fieldHierarchyDelimiter;
+        $this->_fieldLabelHierarchyDelimiter = $_fieldLabelHierarchyDelimiter;
 
         foreach ($fieldsFilters as $fieldString => $fieldFilters) {
 
