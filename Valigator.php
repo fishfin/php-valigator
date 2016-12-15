@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.1
+ * @version     1.0.2
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -71,8 +71,8 @@ class Valigator
     protected $_customValidations = array();
 
     // Delimiter for input field hierarchy
-    protected $_fieldTreeDelimiter = '.';
-    
+    protected $_fieldHierarchyDelimiter = '.';
+
     // Multibyte supported
     protected $_mbSupported = FALSE;
 
@@ -208,7 +208,7 @@ class Valigator
     {
         if (!isset($this->_filters[$field]['field'])
                 || !isset($this->_filters[$field]['parents'])) {
-            $hierarchy = explode($this->_fieldTreeDelimiter, $field);
+            $hierarchy = explode($this->_fieldHierarchyDelimiter, $field);
             $hierarchyMaxDepth = count($hierarchy) - 1;
             $parentHierarchy = array();
 
@@ -222,7 +222,8 @@ class Valigator
             }
         }
 
-        if (!isset($this->_filters[$field]['label'])) {
+        if (!isset($this->_filters[$field]['label'])
+            || $this->_filters[$field]['label'] == '') {
             $this->_filters[$field]['label'] =
                     $this->_convertVariableNameToUpperCaseWords($this->_filters[$field]['field']);
         }
@@ -236,34 +237,35 @@ class Valigator
      *
      * @return object
      */
-    public function __construct(array $filters = array(), string $fieldHierarchyDelimiter = '.')
+    public function __construct(array $fieldsFilters = array()
+            , string $fieldHierarchyDelimiter = '.')
     {
         $this->_mbSupported = function_exists('mb_detect_encoding');
         
         $this->_errormsgHTMLSpanAttr = $this->_emptyErrormsgHTMLSpanAttr;
 
-        $this->setFieldHierarchyDelimiter($fieldHierarchyDelimiter);
+        $this->_fieldHierarchyDelimiter = $fieldHierarchyDelimiter;
 
-        foreach ($filters as $field => $fieldFilter) {
+        foreach ($fieldsFilters as $fieldString => $fieldFilters) {
 
-            if (isset($fieldFilter['label'])) {
-                $this->_filters[$field]['label'] = $fieldFilter['label'];          
-            }
-
-            $this->_setFieldLabelAndHierarchy($field);
+            //if (isset($fieldFilters['label'])) {
+            //    $this->_filters[$field]['label'] = $fieldFilters['label'];          
+            //}
+            //
+            //$this->_setFieldLabelAndHierarchy($field);
 
             $this->setSanitizations(
-                    isset($fieldFilter['sanitizations'])
-                    ? array($field => $fieldFilter['sanitizations'])
-                    : (isset($fieldFilter['sanitization'])
-                        ? array($field => $fieldFilter['sanitization'])
+                    isset($fieldFilters['sanitizations'])
+                    ? array($fieldString => $fieldFilters['sanitizations'])
+                    : (isset($fieldFilters['sanitization'])
+                        ? array($fieldString => $fieldFilters['sanitization'])
                         : array()));
 
             $this->setValidations(
-                    isset($fieldFilter['validations'])
-                    ? array($field => $fieldFilter['validations'])
-                    : (isset($fieldFilter['validation'])
-                        ? array($field => $fieldFilter['validation'])
+                    isset($fieldFilters['validations'])
+                    ? array($fieldString => $fieldFilters['validations'])
+                    : (isset($fieldFilters['validation'])
+                        ? array($fieldString => $fieldFilters['validation'])
                         : array()));
         }
 
@@ -301,6 +303,7 @@ class Valigator
         }
     }
 
+
     /**
      * Converts input validation rules array to string. Some examples of
      * conversion are:
@@ -308,33 +311,38 @@ class Valigator
      * {'filter' => 'filterName', 'args' => {'arg1', 'arg2'}, 'errormsg' =>
      * 'Error Text'} to "filterName:arg1,arg2;'Error Text'"
      *
-     * @param array $fieldFiltersArray
+     * @param array $fieldsArray
      *
      * @return string
      */
-    private function _convertFieldFiltersArrayToString(array $fieldFiltersArray)
+    private function _convertFieldsArrayToString(array $fieldsArray)
     {
-        $fieldFiltersString = '';
+        $fieldsString = '';
 
-        $fieldFilterFlattened = array();
+        $fieldsFlattened = array();
 
-        foreach ($fieldFiltersArray as $fieldFilter) {
-            if (is_string($fieldFilter)) {
-                $fieldFilterFlattened[] = $fieldFilter;
-            } else if (isset($fieldFilter['filter'])) {
-                $fieldFilterFlattened[] =
-                        $fieldFilter['filter'] . ':'
-                        . (isset($fieldFilter['args'])
-                                ? implode(',', $fieldFilter['args'])
-                                : '') . ';\''
-                        . (isset($fieldFilter['errormsg'])
-                                ? $fieldFilter['errormsg']
+        foreach ($fieldsArray as $field => $fieldParms) {
+            if (is_numeric($field)) {
+                if (is_string($fieldParms)) {
+                  $fieldsFlattened[] = $fieldParms;
+                } else if (isset($fieldParms['field'])) {
+                    $fieldsFlattened[] =
+                        $fieldParms['field'] . ':\''
+                        . (isset($fieldParms['label'])
+                                ? $fieldParms['label']
+                                : '') . '\'';                    
+                }
+            } else {
+                $fieldsFlattened[] =
+                        $field . ':\''
+                        . (isset($fieldParms['label'])
+                                ? $fieldParms['label']
                                 : '') . '\'';                    
             }
         }
-        $fieldFiltersString = implode('|', $fieldFilterFlattened);
+        $fieldsString = implode('|', $fieldsFlattened);
 
-        return $fieldFiltersString;
+        return $fieldsString;
     }
 
     /**
@@ -350,16 +358,130 @@ class Valigator
      * "filterName:;'Error Text'" to {'filter' => 'filterName',
      * 'args' => {}, 'errormsg' => 'Error Text'}
      *
-     * @param string $fieldFiltersString
+     * @param string $fieldsString
      *
      * @return array
      *
      * @throws Exception if preg_match_all fails
      */
-    private function _convertFieldFiltersStringToArray(string $fieldFiltersString
+    private function _convertFieldsStringToArray(string $fieldsString)
+    {
+        $fieldsArray = array();
+        $fields = array();
+
+        if (!preg_match_all('/'                     // group0: field group
+                                                    //     begin parsing field name
+                . '[\|\s\'"]*'                      //                            no-capture: pipe, none or more spaces, single or double quotes
+                . '(?P<field>[^:].+?)'              // group1: field name         capture   : at least one char (any char), cannot start with : or ; (as they are used later in parsing), lazy (stop at first match)
+                . '(?:[\s\'"]*)'                    //                            no-capture: none or more spaces, single or double quotes
+                                                    //     end parsing field name
+                . '(?:$|\|'                         //                            no-capture: end-of-string or pipe (filter name with no args or message)
+
+                .   '|'                             //                            or
+                .   '(?::'                          //                            no-capture: semi-colon (end of field name)
+                                                    //     begin parsing label
+                .     '(?:'                         //
+                .       '[\s]*'                     //                            no-capture: leading spaces
+                .       '(?P<quote>[\'"]?)'         // group2: begin-quote        capture   : none or more spaces, single or double quotes
+                .       '(?P<label>.*?)'            // group3: label              capture   : none or more characters, lazy (stop at first match)
+                .       '\g{quote}'                 //                            no-capture: same as start quote
+                .       '[\s]*'                     //                            no-capture: trailing spaces
+                .       '(?:$|\|)'                  // no-capture: end-of-string or pipe
+                .     ')'                           //
+                                                    //     end parsing label
+                .   ')'
+                . ')'
+                . '/i',
+                $fieldsString, $fields, PREG_SET_ORDER)) {
+            throw new \Exception('Invalid field(s) encountered: ' . $fieldsString);
+        }
+
+        foreach ($fields as $field) {
+            if (isset($field['field'])
+                    && ($this->_mbSupported
+                            ? (mb_strcut($field['field'], 0, 1) != '/')
+                            : (substr($field['field'], 0, 1) != '/'))) {
+                $addField = [
+                    'field' => $field['field'],
+                    'label' => isset($field['label']) ? $field['label'] : '',
+                ];
+                $fieldsArray[] = $addField;
+            }
+        }
+
+        return $fieldsArray;
+    }
+
+    /**
+     * Converts input validation rules array to string. Some examples of
+     * conversion are:
+     *
+     * {'filter' => 'filterName', 'args' => {'arg1', 'arg2'}, 'errormsg' =>
+     * 'Error Text'} to "filterName:arg1,arg2;'Error Text'"
+     *
+     * @param array $filtersArray
+     *
+     * @return string
+     */
+    private function _convertFiltersArrayToString(array $filtersArray)
+    {
+        $filtersString = '';
+
+        $filtersFlattened = array();
+
+        foreach ($filtersArray as $filter => $filterParms) {
+            if (is_numeric($filter)) {
+                if (is_string($filterParms)) {
+                  $filtersFlattened[] = $filterParms;
+                } else if (isset($filterParms['filter'])) {
+                    $filtersFlattened[] =
+                        $filterParms['filter'] . ':'
+                        . (isset($filterParms['args'])
+                                ? implode(',', $filterParms['args'])
+                                : '') . ';\''
+                        . (isset($filterParms['errormsg'])
+                                ? $filterParms['errormsg']
+                                : '') . '\'';                    
+                }
+            } else {
+                $filtersFlattened[] =
+                        $filter . ':'
+                        . (isset($filterParms['args'])
+                                ? implode(',', $filterParms['args'])
+                                : '') . ';\''
+                        . (isset($filterParms['errormsg'])
+                                ? $filterParms['errormsg']
+                                : '') . '\'';                    
+            }
+        }
+        $filtersString = implode('|', $filtersFlattened);
+
+        return $filtersString;
+    }
+
+    /**
+     * Converts input validation rules string to array. Some examples of
+     * conversion are:
+     *
+     * "filterName:arg1,arg2;'Error Text'" to {'filter' => 'filterName',
+     * 'args' => {'arg1', 'arg2'}, 'errormsg' => 'Error Text'}
+     *
+     * "filterName:arg1" to {'filter' => 'filterName',
+     * 'args' => {'arg1'}, 'errormsg' => ''}
+     *
+     * "filterName:;'Error Text'" to {'filter' => 'filterName',
+     * 'args' => {}, 'errormsg' => 'Error Text'}
+     *
+     * @param string $filtersString
+     *
+     * @return array
+     *
+     * @throws Exception if preg_match_all fails
+     */
+    private function _convertFiltersStringToArray(string $filtersString
             , bool $isValidation = TRUE)
     {
-        $fieldFiltersArray = array();
+        $filtersArray = array();
         $filters = array();
 
         if (!preg_match_all('/'                     // group0: filter group
@@ -397,9 +519,9 @@ class Valigator
                 .   '(?:;'                          //
                 .     '(?:'                         //
                 .       '[\s]*'                     //
-                .       '(?P<quote_b>[\'"]?)'       //                             note: capture name changed
-                .       '(?P<errormsg_b>.*?)'       //                             note: capture name changed
-                .       '\g{quote_b}'               //                             note: capture name changed
+                .       '(?P<quote_b>[\'"]?)'       //                            note: capture name changed
+                .       '(?P<errormsg_b>.*?)'       //                            note: capture name changed
+                .       '\g{quote_b}'               //                            note: capture name changed
                 .       '[\s]*'                     //
                 .       '(?:$|\|)'                  //
                 .     ')'                           //
@@ -407,8 +529,8 @@ class Valigator
 
                 . ')'
                 . '/i',
-                $fieldFiltersString, $filters, PREG_SET_ORDER)) {
-            throw new \Exception('Invalid filter encountered: ' . $fieldFiltersString);
+                $filtersString, $filters, PREG_SET_ORDER)) {
+            throw new \Exception('Invalid filter(s) encountered: ' . $filtersString);
         }
 
         foreach ($filters as $filter) {
@@ -416,20 +538,20 @@ class Valigator
                     && ($this->_mbSupported
                             ? (mb_strcut($filter['filter'], 0, 1) != '/')
                             : (substr($filter['filter'], 0, 1) != '/'))) {
-                $fieldFilter = [
+                $addFilter = [
                     'filter' => strtolower($filter['filter']),
                     'args' => (isset($filter['args']) ? array_map('trim', explode(",", $filter['args'])) : array()),
                 ];
                 if ($isValidation) {
-                    $fieldFilter['errormsg'] =
+                    $addFilter['errormsg'] =
                             isset($filter['errormsg_b']) ? $filter['errormsg_b'] :
                             (isset($filter['errormsg_a']) ? $filter['errormsg_a'] : '');
                 }
-                $fieldFiltersArray[] = $fieldFilter;
+                $filtersArray[] = $addFilter;
             }
         }
 
-        return $fieldFiltersArray;
+        return $filtersArray;
     }
 
     /**
@@ -883,20 +1005,6 @@ class Valigator
     }
 
     /**
-     * Updates the field tree delimiter.
-     *
-     * @param string   $fieldHierarchyDelimiter
-     *
-     * @return object
-     */
-    public function setFieldHierarchyDelimiter(string $fieldHierarchyDelimiter)
-    {
-        $this->_fieldTreeDelimiter = $fieldHierarchyDelimiter;
-
-        return $this;
-    }
-
-    /**
      * Set/overwrite field labels.
      *
      * @param array $fieldLabels
@@ -915,38 +1023,46 @@ class Valigator
     /**
      * Adds sanitizations for input fields.
      *
-     * @param array $fieldSanitizations
+     * @param array $sanitizations
      *
      * @return object
      */
-    public function setSanitizations(array $fieldSanitizations
+    public function setSanitizations(array $sanitizations
             , bool $mergeBefore = FALSE)
     {
-        foreach($fieldSanitizations as $field => $fieldFilters) {
+        foreach($sanitizations as $fieldString => $fieldFilters) {
 
-            $this->_setFieldLabelAndHierarchy($field);
+            $fieldsArray = $this->_convertFieldsStringToArray($fieldString);
 
-            if (!isset($this->_filters[$field]['sanitizations'])) {
-                $this->_filters[$field]['sanitizations'] = array();
-            }
+            foreach($fieldsArray as $fieldElement) {
 
-            if (is_array($fieldFilters)) {
-                $fieldFiltersString =
-                        $this->_convertFieldFiltersArrayToString($fieldFilters);
-            } else {
-                $fieldFiltersString = $fieldFilters;
-            }
+                $field = $fieldElement['field'];
 
-            $fieldFiltersArray =
-                    $this->_convertFieldFiltersStringToArray($fieldFiltersString, FALSE);
+                $this->_setFieldLabelAndHierarchy($field);
 
-            $this->_filters[$field]['sanitizations'] = ($mergeBefore === TRUE)
+                if (!isset($this->_filters[$field]['sanitizations'])) {
+                    $this->_filters[$field]['sanitizations'] = array();
+                }
+
+                if (is_array($fieldFilters)) {
+                    $fieldFiltersString =
+                        $this->_convertFiltersArrayToString($fieldFilters);
+                } else {
+                    $fieldFiltersString = $fieldFilters;
+                }
+
+                $fieldFiltersArray =
+                    $this->_convertFiltersStringToArray($fieldFiltersString, FALSE);
+
+                $this->_filters[$field]['sanitizations'] = ($mergeBefore === TRUE)
                     ? array_merge_recursive($fieldFiltersArray,
                             $this->_filters[$field]['sanitizations'])
                     : array_merge_recursive($this->_filters[$field]['sanitizations']
                             , $fieldFiltersArray);
+                
+            }
         }
-        
+
         return $this;
     }
 
@@ -959,35 +1075,46 @@ class Valigator
      */
     public function setValidations(array $fieldValidations)
     {
-        foreach($fieldValidations as $field => $fieldFilters) {
+        foreach($fieldValidations as $fieldString => $fieldFilters) {
 
-            $this->_setFieldLabelAndHierarchy($field);
+            $fieldsArray = $this->_convertFieldsStringToArray($fieldString);
 
-            if (!isset($this->_filters[$field]['validations'])) {
-                $this->_filters[$field]['validations'] = array();
-            }
+            foreach($fieldsArray as $fieldElement) {
 
-            if (is_array($fieldFilters)) {
-                $fieldFiltersString =
-                        $this->_convertFieldFiltersArrayToString($fieldFilters);
-            } else {
-                $fieldFiltersString = $fieldFilters;
-            }
+                $field = $fieldElement['field'];
 
-            $fieldFiltersArray =
-                    $this->_convertFieldFiltersStringToArray($fieldFiltersString);
+                if ($fieldElement['label'] != '') {
+                    $this->_filters[$field]['label'] = $fieldElement['label'];
+                }
 
-            $this->_filters[$field]['validations'] =
+                $this->_setFieldLabelAndHierarchy($field);
+
+                if (!isset($this->_filters[$field]['validations'])) {
+                    $this->_filters[$field]['validations'] = array();
+                }
+
+                if (is_array($fieldFilters)) {
+                    $fieldFiltersString =
+                        $this->_convertFiltersArrayToString($fieldFilters);
+                } else {
+                    $fieldFiltersString = $fieldFilters;
+                }
+
+                $fieldFiltersArray =
+                    $this->_convertFiltersStringToArray($fieldFiltersString);
+
+                $this->_filters[$field]['validations'] =
                     array_merge_recursive($this->_filters[$field]['validations']
                             , $fieldFiltersArray);
-
-            // shifting 'required' and 'notempty' to beginning of validation
-            //foreach ($this->_filters[$field]['validations'] as $index => $fieldValidation) {
-            //    if (in_array($fieldValidation['filter'], ['required', 'notempty'])) {
-            //            unset($this->_filters[$field]['validations'][$index]);
-            //            array_unshift($this->_filters[$field]['validations'], $fieldValidation);
-            //    }
-            //}
+                // shifting 'required' and 'notempty' to beginning of validation
+                //foreach ($this->_filters[$field]['validations']
+                //        as $index => $fieldValidation) {
+                //    if (in_array($fieldValidation['filter'], ['required', 'notempty'])) {
+                //            unset($this->_filters[$field]['validations'][$index]);
+                //            array_unshift($this->_filters[$field]['validations'], $fieldValidation);
+                //    }
+                //
+            }
         }
         
         return $this;
