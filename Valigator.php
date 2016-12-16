@@ -26,7 +26,7 @@ class Valigator
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
     const FIELDS_AND_HTML_ERRORMSGS = 3;
-    const FORCE_FULLSTOP_TO_ERRORMSGS = TRUE;
+    const FORCE_FULLSTOP_ON_ERRORMSGS = TRUE;
 
     // map options passed to functions(parameters) to be called internally
     protected $_aliases = [
@@ -1349,7 +1349,7 @@ class Valigator
                                 'args' => $args,
                                 'errormsg' => $errorMsg
                                     . (!in_array(substr($errorMsg, -1), ['.', '!', '?'])
-                                       && self::FORCE_FULLSTOP_TO_ERRORMSGS
+                                       && self::FORCE_FULLSTOP_ON_ERRORMSGS
                                        ?  '.' : ''),
                                 'field' => $field,
                                 'filter' => $filter,
