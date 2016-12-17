@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.2
+ * @version     1.0.3
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
@@ -21,7 +21,7 @@ namespace Fishfin;
  */
 class Valigator
 {
-    const VERSION = '1.0.2';
+    const VERSION = '1.0.3';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -387,7 +387,8 @@ class Valigator
         if (!preg_match_all('/'                     // group0: field group
                                                     //     begin parsing field name
                 . '[\|\s\'"]*'                      //                            no-capture: pipe, none or more spaces, single or double quotes
-                . '(?P<field>[^:].+?)'              // group1: field name         capture   : at least one char (any char), cannot start with : or ; (as they are used later in parsing), lazy (stop at first match)
+                //. '(?P<field>[^:].+?              // group1: field name         capture   : at least one char (any char), cannot start with : (as they are used later in parsing), lazy (stop at first match)
+                . '(?P<field>[^:].*?)'              // group1: field name         capture   : at least one char (any char), cannot start with : (as they are used later in parsing), lazy (stop at first match)
                 . '(?:[\s\'"]*)'                    //                            no-capture: none or more spaces, single or double quotes
                                                     //     end parsing field name
                 . '(?:$|\|'                         //                            no-capture: end-of-string or pipe (filter name with no args or message)
@@ -502,7 +503,8 @@ class Valigator
         if (!preg_match_all('/'                     // group0: filter group
                                                     //     begin parsing filter name
                 . '[\|\s\'"]*'                      //                            no-capture: pipe, none or more spaces, single or double quotes
-                . '(?P<filter>[^:;].+?)'            // group1: filter name        capture   : at least one char (any char), cannot start with : or ; (as they are used later in parsing), lazy (stop at first match)
+                //. '(?P<filter>[^:;].+?            // group1: filter name        capture   : at least one char (any char), cannot start with : or ; (as they are used later in parsing), lazy (stop at first match)
+                . '(?P<filter>[^:;].*?)'            // group1: filter name        capture   : at least one char (any char), cannot start with : or ; (as they are used later in parsing), lazy (stop at first match)
                 . '(?:[\s\'"]*)'                    //                            no-capture: none or more spaces, single or double quotes
                                                     //     end parsing filter name
                 . '(?:$|\|'                         //                            no-capture: end-of-string or pipe (filter name with no args or message)
