@@ -37,6 +37,8 @@ class Valigator
         'allow_thousand' => FILTER_FLAG_ALLOW_THOUSAND,
         'alphabet' => 'alphabetic',
         'bool' => 'boolean',
+        'casttonum' => 'casttonumeric',
+        'casttonumber' => 'casttonumeric',
         'encode_amp' => FILTER_FLAG_ENCODE_AMP,
         'encode_high' => FILTER_FLAG_ENCODE_HIGH,
         'encode_low' => FILTER_FLAG_ENCODE_LOW,
@@ -1523,6 +1525,11 @@ class Valigator
     protected function sanitize_numeric($value, $args = NULL)
     {
         return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+    }
+
+    protected function sanitize_casttonumeric($value, $args = NULL)
+    {
+        return (is_numeric($value) ? (int) $value : $value);
     }
 
     /**
