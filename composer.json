@@ -1,7 +1,16 @@
 {
-    "name": "fishfin/valigator",
+    "name": "fishfin/php-valigator",
+    "type": "library",
     "description": "Stand-alone PHP Class for Data Sanitization and Validation",
+    "keywords": ["sanitization", "validation"],
+    "homepage": "https://github.com/fishfin/php-valigator",
+    "license": "MIT",
     "require": {
-        "php": "^5.5 || ^7.0"
+        "php": "5.5.* || 5.6.* || 7.0.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Monolog": "src"
+        }
     }
 }
