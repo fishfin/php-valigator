@@ -707,7 +707,7 @@ class Valigator
                     : ["<span {$$spanVar}>", "</span>"];
         }
 
-        $errorMsg = str_replace('{field}'
+        $errorMsg = str_ireplace(['{field}', '{label}']
                 , $spanTags['field'][0] . $this->_filters[$field]['label']
                         . $spanTags['field'][1]
                 , $errorMsg);
@@ -715,15 +715,15 @@ class Valigator
         if ($value == '') {
             $value = 'empty';
         }
-        $errorMsg = str_replace('{value}'
+        $errorMsg = str_ireplace('{value}'
                 , $spanTags['value'][0] . $value . $spanTags['value'][1]
                 , $errorMsg);
 
-        $errorMsg = str_replace('{filter}'
+        $errorMsg = str_ireplace('{filter}'
                 , $spanTags['filter'][0] . $filter . $spanTags['filter'][1]
                 , $errorMsg);
 
-        $errorMsg = str_replace('{args}'
+        $errorMsg = str_ireplace(['{args}', '{parms}']
                 , $spanTags['arg'][0]
                     . implode($spanTags['arg'][1]
                             . $this->_argsDelimiter . $spanTags['arg'][0], $args)
@@ -732,7 +732,7 @@ class Valigator
 
         foreach ($args as $index => $arg) {
             $argIndex = $index + 1;
-            $errorMsg = str_replace("{arg{$argIndex}}"
+            $errorMsg = str_ireplace(["{arg{$argIndex}}", "{parm{$argIndex}}"]
                     , $spanTags['arg'][0] . $arg . $spanTags['arg'][1]
                     , $errorMsg);
         }
@@ -1884,7 +1884,7 @@ class Valigator
             return FALSE;
         }
 
-        $iban = str_replace(' ', '', $value);
+        $iban = str_ireplace(' ', '', $value);
         $iban = substr($iban, 4).substr($iban, 0, 4);
         $iban = strtr($iban, $character);
 
