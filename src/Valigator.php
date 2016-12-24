@@ -719,6 +719,14 @@ class Valigator
                 , $spanTags['field'][0] . $this->_filters[$field]['label']
                         . $spanTags['field'][1]
                 , $errorMsg);
+        $errorMsg = str_ireplace(['{fieldlineage}', '{labellineage}']
+                , $spanTags['field'][0] . $this->_filters[$field]['labelLineageRev']
+                        . $spanTags['field'][1]
+                , $errorMsg);
+        $errorMsg = str_ireplace(['{fieldlineagef}', '{labellineagef}']
+                , $spanTags['field'][0] . $this->_filters[$field]['labelLineageFwd']
+                        . $spanTags['field'][1]
+                , $errorMsg);
 
         if ($value == '') {
             $value = 'empty';
