@@ -1,5 +1,6 @@
 {
     "name": "fishfin/php-valigator",
+    "version": 1.0.3,
     "type": "library",
     "description": "Stand-alone PHP Class for Data Sanitization and Validation",
     "keywords": ["sanitization", "validation"],
