@@ -13,12 +13,10 @@
             "Fishfin\\": "src"}
         }
     }
-    "authors": [
-        {
-            "name": "Fishfin",
-            "email": "fishfin.info@gmail.com",
-            "homepage": "http://fishf.in",
-            "role": "Developer"
-        }
-    ]
+    "authors": {
+        "name": "Fishfin",
+        "email": "fishfin.info@gmail.com",
+        "homepage": "http://fishf.in",
+        "role": "Developer"
+    }
 }
