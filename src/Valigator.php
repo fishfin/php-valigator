@@ -753,6 +753,10 @@ class Valigator
                     , $errorMsg);
         }
 
+        $errorMsg = $errorMsg . (!in_array(substr($errorMsg, -1), ['.', '!', '?'])
+                                       && self::FORCE_FULLSTOP_ON_ERRORMSGS
+                                       ?  '.' : '');
+
         return $spanTags['errormsg'][0] . $errorMsg . $spanTags['errormsg'][1];      
     }
 
@@ -1363,14 +1367,23 @@ class Valigator
                 }
 
                 if (!$validationPassed) {
+                    $labelReplacementInNextAvlErrorMsg = '';
                     foreach($validationErrorMsg as $errorMsg) {
-                        if ($errorMsg != '') {
+                        if (($errorMsgLC = strtolower(trim($errorMsg))) != '') {
+                            if (in_array($errorMsgLC,
+                                    ['{fieldlineage}', '{fieldlineagef}',
+                                        '{labellineage}', '{labellineagef}'])) {
+                                $labelReplacementInNextAvlErrorMsg = $errorMsgLC;
+                                continue;
+                            }
+
+                            if ($labelReplacementInNextAvlErrorMsg) {
+                                $errorMsg = str_ireplace(['{field}', '{label}'],
+                                        $labelReplacementInNextAvlErrorMsg, $errorMsg);
+                            }
                             $this->_validationErrorLog[] = [
                                 'args' => $args,
-                                'errormsg' => $errorMsg
-                                    . (!in_array(substr($errorMsg, -1), ['.', '!', '?'])
-                                       && self::FORCE_FULLSTOP_ON_ERRORMSGS
-                                       ?  '.' : ''),
+                                'errormsg' => $errorMsg,
                                 'field' => $field,
                                 'filter' => $filter,
                                 'value' => (string) $fieldValue, //$this->_getFieldValueFromInput($field, $input),
