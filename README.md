@@ -43,6 +43,8 @@ Human-readable label of the field which the programmer can set. If not set, labe
  * **errormsg**  
 Error messages emitted by validations (one per validation). Can be overwritten with custom error messages by the programmer per field per validation. Error messages may contain some special tags which will be replaced dynamically:  
 `{field}` or `{label}` is replaced with label of the field  
+`{fieldlineage}` or `{labellineage}` is replaced with label of the full field hierarchy in reverse order (as in `Node 3 of Node 2 of Node 1`
+`{fieldlineagef}` or `{labellineagef}` is replaced with label of the full field hierarchy in forward order (as in `Node 1.Node 2.Node 3`
 `{value}` is replaced with value of the field  
 `{filter}` is replaced with name of the filter  
 `{args}` or `{parms}` is replaced with delimited string of concatenated arguments to the filter  
