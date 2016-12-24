@@ -77,7 +77,7 @@ class Valigator
 
     // Delimiter for input field hierarchy
     protected $_fieldLabelFwdHierarchyDelimiter = '.';
-    protected $_fieldLabelRevHierarchyDelimiter = ' in ';
+    protected $_fieldLabelRevHierarchyDelimiter = ' of ';
 
     // Multibyte supported
     protected $_mbSupported = FALSE;
@@ -231,17 +231,22 @@ class Valigator
         if (!isset($this->_filters[$field]['label'])
             || $this->_filters[$field]['label'] == '') {
 
-            $showFieldHierarchy = (array)
-                    ($this->_fieldLabelRevHierarchyDelimiter === NULL
-                    ? $this->_filters[$field]['field']
-                    : array_reverse($fieldHierarchy));
-
             $this->_filters[$field]['label'] =
-                    implode ($this->_fieldLabelRevHierarchyDelimiter,
-                             array_map(function($string) {
-                                 return $this->_convertVariableNameToUpperCaseWords($string);
-                             }, $showFieldHierarchy)
-                            );
+                    $this->_convertVariableNameToUpperCaseWords($this->_filters[$field]['field']);
+
+            $labelLineage = array_merge_recursive(
+                    array_map(function($string) {
+                        return $this->_convertVariableNameToUpperCaseWords($string);
+                    }, $this->_filters[$field]['fieldLineage']),
+                    [$this->_filters[$field]['label']]
+                );
+
+            $this->_filters[$field]['labelLineageFwd'] = 
+                    implode($this->_fieldLabelFwdHierarchyDelimiter, 
+                            $labelLineage);
+            $this->_filters[$field]['labelLineageRev'] = 
+                    implode($this->_fieldLabelRevHierarchyDelimiter,
+                            array_reverse($labelLineage));
         }
     }
 
@@ -256,7 +261,7 @@ class Valigator
     public function __construct(array $fieldsFilters = array()
             , string $fieldHierarchyDelimiter = '.'
             , string $fieldLabelFwdHierarchyDelimiter = '.'
-            , string $fieldLabelRevHierarchyDelimiter = ' in ')
+            , string $fieldLabelRevHierarchyDelimiter = ' of ')
     {
         $this->_mbSupported = function_exists('mb_detect_encoding');
         
