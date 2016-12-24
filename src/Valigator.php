@@ -76,7 +76,8 @@ class Valigator
     protected $_fieldHierarchyDelimiter = '.';
 
     // Delimiter for input field hierarchy
-    protected $_fieldLabelHierarchyDelimiter = ' in ';
+    protected $_fieldLabelFwdHierarchyDelimiter = '.';
+    protected $_fieldLabelRevHierarchyDelimiter = ' in ';
 
     // Multibyte supported
     protected $_mbSupported = FALSE;
@@ -212,17 +213,17 @@ class Valigator
     private function _setFieldLabelAndHierarchy($field)
     {
         if (!isset($this->_filters[$field]['field'])
-                || !isset($this->_filters[$field]['parents'])) {
+                || !isset($this->_filters[$field]['fieldLineage'])) {
             $fieldHierarchy = explode($this->_fieldHierarchyDelimiter, $field);
             $fieldHierarchyMaxDepth = count($fieldHierarchy) - 1;
             $parentHierarchy = array();
 
-            $this->_filters[$field]['parents'] = array();
+            $this->_filters[$field]['fieldLineage'] = array();
             foreach ($fieldHierarchy as $depth => $node) {
                 if ($depth == $fieldHierarchyMaxDepth) {
                     $this->_filters[$field]['field'] = $node;
                 } else {
-                    $this->_filters[$field]['parents'][] = $node;
+                    $this->_filters[$field]['fieldLineage'][] = $node;
                 }
             }
         }
@@ -231,12 +232,12 @@ class Valigator
             || $this->_filters[$field]['label'] == '') {
 
             $showFieldHierarchy = (array)
-                    ($this->_fieldLabelHierarchyDelimiter === NULL
+                    ($this->_fieldLabelRevHierarchyDelimiter === NULL
                     ? $this->_filters[$field]['field']
                     : array_reverse($fieldHierarchy));
 
             $this->_filters[$field]['label'] =
-                    implode ($this->_fieldLabelHierarchyDelimiter,
+                    implode ($this->_fieldLabelRevHierarchyDelimiter,
                              array_map(function($string) {
                                  return $this->_convertVariableNameToUpperCaseWords($string);
                              }, $showFieldHierarchy)
@@ -254,14 +255,16 @@ class Valigator
      */
     public function __construct(array $fieldsFilters = array()
             , string $fieldHierarchyDelimiter = '.'
-            , string $_fieldLabelHierarchyDelimiter = NULL)
+            , string $fieldLabelFwdHierarchyDelimiter = '.'
+            , string $fieldLabelRevHierarchyDelimiter = ' in ')
     {
         $this->_mbSupported = function_exists('mb_detect_encoding');
         
         $this->_errormsgHTMLSpanAttr = $this->_emptyErrormsgHTMLSpanAttr;
 
         $this->_fieldHierarchyDelimiter = $fieldHierarchyDelimiter;
-        $this->_fieldLabelHierarchyDelimiter = $_fieldLabelHierarchyDelimiter;
+        $this->_fieldLabelFwdHierarchyDelimiter = $fieldLabelFwdHierarchyDelimiter;
+        $this->_fieldLabelRevHierarchyDelimiter = $fieldLabelRevHierarchyDelimiter;
 
         foreach ($fieldsFilters as $fieldString => $fieldFilters) {
 
@@ -627,7 +630,7 @@ class Valigator
         $parentageExists = TRUE;
         $rollingInput = &$input;
 
-        foreach ($this->_filters[$field]['parents'] as $parentDepth => $parent) {
+        foreach ($this->_filters[$field]['fieldLineage'] as $parentDepth => $parent) {
             if (is_array($rollingInput)
                     && ((array_key_exists($parent, $rollingInput)
                         || $autoAddParentage))) {
