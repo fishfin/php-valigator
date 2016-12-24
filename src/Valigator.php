@@ -233,7 +233,9 @@ class Valigator
 
             $this->_filters[$field]['label'] =
                     $this->_convertVariableNameToUpperCaseWords($this->_filters[$field]['field']);
+        }
 
+        if (!isset($this->_filters[$field]['labelLineageFwd'])) {
             $labelLineage = array_merge_recursive(
                     array_map(function($string) {
                         return $this->_convertVariableNameToUpperCaseWords($string);
@@ -247,6 +249,7 @@ class Valigator
             $this->_filters[$field]['labelLineageRev'] = 
                     implode($this->_fieldLabelRevHierarchyDelimiter,
                             array_reverse($labelLineage));
+            
         }
     }
 
