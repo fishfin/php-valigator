@@ -42,13 +42,13 @@ Human-readable label of the field which the programmer can set. If not set, labe
   * `SuspenseAccount#` becomes `Suspense Account #`
  * **errormsg**  
 Error messages emitted by validations (one per validation). Can be overwritten with custom error messages by the programmer per field per validation. Error messages may contain some special tags which will be replaced dynamically:  
-`{field}` or `{label}` is replaced with label of the field  
-`{fieldlineage}` or `{labellineage}` is replaced with label of the full field hierarchy in reverse order (as in `Node 3 of Node 2 of Node 1`  
-`{fieldlineagef}` or `{labellineagef}` is replaced with label of the full field hierarchy in forward order (as in `Node 1.Node 2.Node 3`  
-`{value}` is replaced with value of the field  
-`{filter}` is replaced with name of the filter  
-`{args}` or `{parms}` is replaced with delimited string of concatenated arguments to the filter  
-`{arg1}`, ..., `{argn}` or `{parm1}`, ..., `{parmn}` are replaced with individual arguments to the filter if they exist (note that there is no {arg0} or {parm0})
+  * `{field}` or `{label}` is replaced with label of the field
+  * `{fieldlineage}` or `{labellineage}` is replaced with label of the full field hierarchy in reverse order (as in `Node 3 of Node 2 of Node 1`
+  * `{fieldlineagef}` or `{labellineagef}` is replaced with label of the full field hierarchy in forward order (as in `Node 1.Node 2.Node 3`
+  * `{value}` is replaced with value of the field
+  * `{filter}` is replaced with name of the filter
+  * `{args}` or `{parms}` is replaced with delimited string of concatenated arguments to the filter
+  * `{arg1}`, ..., `{argn}` or `{parm1}`, ..., `{parmn}` are replaced with individual arguments to the filter if they exist (note that there is no {arg0} or {parm0})
 
 ### The Gears and Wheels
 Its easier to proceed from here with an example. Lets say we want to validate the following fields:
