@@ -5,7 +5,7 @@ Lovers of minimalism, rejoice! Valigator is a stand-alone PHP class for data san
 PHP API frameworks are picking up, fast. They are wonderfully minimalist, speedy, and vastly preferred over powerful yet sometimes clunky larger frameworks. To implement validations in API frameworks and projects, large vendor sources have to be installed, adding unnecessary additions to code-base and complexity. Valigator was created to address specifically that. And there's nothing that stops you from using Valigator in non-API projects. Go ahead, you'll love it!
 
 #####    Valigator Checklist:
-      ✓ PHP (5.5.\*, 5.6.\*, 7.\*)
+      ✓ PHP (5.5.*, 5.6.*, 7.*)
       ✓ Simple
       ✓ Flexible
       ✓ Stand-alone
@@ -13,10 +13,10 @@ PHP API frameworks are picking up, fast. They are wonderfully minimalist, speedy
       ✓ Data Sanitization
       ✓ Data Validation
 
-PS: Slim Framework 3 is groovy!
+PS: Slim Framework 3 is awesome!
 
 ### Yet Another Vali[dg]ator
-Maybe. Maybe not. Yeah, Valigator draws inspiration from some of the good, nay, great ones. And adds its own good bits too. Just to get you interested: Filter Aliasing, Multiple Arguments, Programmer-customizable Validation Error Messages and more.
+Maybe. Maybe not. Yeah, Valigator draws inspiration from some of the good, nay, great ones. And adds its own good bits too. Just to get you interested: Filter Aliasing, Multiple Arguments, custom Labels, custom Validation Error Messages and more.
 
 ## Anatomy of Valigator
 ### Terminology
@@ -76,14 +76,12 @@ Lets now create filters based on the data validation requirements we have, and a
 ``` php
 <?php
 $myFilters = [
-  'loginId' => [
-    'label' => 'Retail User ID',                       // overrides default 'Login Id'
+  'loginId:"Retail User ID"' => [                      // overrides default label 'Login Id'
     'sanitizations' => 'trim',                         // 'trim' is a popular filter, works exactly
                                                        // like the PHP in-built trim()
     'validations' => 'required|email',                 // multiple validation filters
   ],
-  'name' => [
-    'label' => 'Full Name',                            // overrides default 'Name'
+  'name:"Full Name"' => [                              // overrides default 'Name'
     'sanitization' => 'trim',                          // singular 'sanitization' works too
     'validation' => 'required|personname',             // singular 'validation' works too
   ],
@@ -92,8 +90,7 @@ $myFilters = [
     'sanitizations' => 'trim|numeric',                 // multiple sanitization filters
     'validations' => 'creditcard',                     // if present, must be credit card number
   ],
-  'addressPINCode' => [
-    'label' => 'Indian PIN Code',                      // overrides default 'Address PIN Code'
+  'addressPINCode:"Indian PIN Code"' => [              // overrides default 'Address PIN Code'
                                                        // no sanitization filters here
     'validations' => 'numeric|exactlen:6',             // if present, must be numeric of exactly 6
                                                        // characters length
