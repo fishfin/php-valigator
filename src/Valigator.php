@@ -7,21 +7,20 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.3
+ * @version     1.0.0
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
  * require any framework to do its job. It is a very detailed implementation and
  * I hope you will find it useful.
  * 
- * Valigator should work with PHP 5.4.* upwards.
+ * Valigator should work with PHP 5.5.* upwards.
  * 
  * Data sanitization and validation can be run independently of each other, or
  * in succession.
  */
 class Valigator
 {
-    const VERSION = '1.0.3';
     const PLAIN_ERRORMSGS = 0;
     const FIELDS_AND_PLAIN_ERRORMSGS = 1;
     const HTML_ERRORMSGS = 2;
@@ -44,6 +43,7 @@ class Valigator
         'encode_low' => FILTER_FLAG_ENCODE_LOW,
         'fileext' => 'fileextension',
         'host_required' => FILTER_FLAG_HOST_REQUIRED,
+        'inlist' => 'inlistci',
         'int' => 'integer',
         'ipv4' => FILTER_FLAG_IPV4,
         'ipv6' => FILTER_FLAG_IPV6,
@@ -52,6 +52,7 @@ class Valigator
         'no_encode_quotes' => FILTER_FLAG_NO_ENCODE_QUOTES,
         'no_priv_range' => FILTER_FLAG_NO_PRIV_RANGE,
         'no_res_range' => FILTER_FLAG_NO_RES_RANGE,
+        'notinlist' => 'notinlistci',
         'null_on_failure' => FILTER_NULL_ON_FAILURE,
         'num' => 'numeric',
         'number' => 'numeric',
@@ -102,7 +103,8 @@ class Valigator
         'float' => '{field} may only contain a float value',
         'guidv4' => '{field} is not a valid GUID (v4)',
         'iban' => '{field} is not a valid IBAN',
-        'inlist' => '{field} must be one of these values: {args}',
+        'inlistci' => '{field} must be one of these values: {args}',
+        'inlistcs' => '{copy:inlistci}',
         'integer' => '{field} may only contain an integer value',
         'ip' => '{field} does not contain a valid IP address',
         'ipv4' => '{field} does not contain a valid IPv4 address',
@@ -115,7 +117,8 @@ class Valigator
         'minnumeric' => 'The {field} field needs to be a numeric value, equal to, or higher than {arg1}',
         'mismatch' => 'There is no validation rule for {field}',
         'notempty' => '{field} cannot be empty',
-        'notinlist' => '{field} cannot be one of these values {args}',
+        'notinlistci' => '{field} cannot be one of these values: {args}',
+        'notinlistcs' => '{copy:notinlistci}',
         'numeric' => '{field} may only contain numeric characters',
         'pass' => 'Placeholder text, will never be used as {filter} will never fail! :)',
         'personname' => '{field} does not seem to contain a person\'s name',
@@ -685,7 +688,29 @@ class Valigator
         } else {
             $errorMsg = $this->_factoryValidationErrorMsgs['default_long'];            
         }
-        
+
+        if (preg_match('/^'                         // start at beginning of subject
+                . '(?:'                             // no-capture group 1
+                .   '[\s]*'                         // none or more spaces
+                .   '{'                             // followed by '{'
+                .   '[\s]*'                         // followed by none or more spaces
+                .   'copy'                          // followed by keyword 'copy'
+                .   '[\s]*'                         // followed by none or more spaces
+                .   ':'                             // followed by ':'
+                .   '[\s]*'                         // followed by none or more spaces
+                . ')'                               // end of group 1
+                . '(?P<filter>.*?)'                 // group 2 with alias name 'filter', lazy-load 
+                . '(?:'                             // no-capture group 3
+                .   '[\s]*'                         // followed by none or more spaces
+                .   '}'                             // followed by '}'
+                .   '[\s]*'                         // followed by none or more spaces
+                . ')'                               // end of group 3
+                . '$'                               // stop only at end of subject
+                . '/i'                              // case-insensitive regex
+                , $errorMsg, $matches)) {
+            $errorMsg = $this->_getValidationErrorMsg($matches['filter']);
+        }
+
         return $errorMsg;
     }
 
@@ -1402,21 +1427,6 @@ class Valigator
     }
 
     /**
-     * Sanitize the string by urlencoding characters.
-     *
-     * Usage: '<index>' => 'urlencode'
-     *
-     * @param string $value
-     * @param array  $args
-     *
-     * @return string
-     */
-    protected function sanitize_urlencode($value, $args = NULL)
-    {
-        return filter_var($value, FILTER_SANITIZE_ENCODED);
-    }
-
-    /**
      * Filter out all HTML tags except the defined basic tags.
      *
      * @param string $value
@@ -1427,6 +1437,11 @@ class Valigator
     protected function sanitize_basichtmltags($value, $args = NULL)
     {
         return strip_tags($value, $this->_basicHTMLTags);
+    }
+
+    protected function sanitize_casttonumeric($value, $args = NULL)
+    {
+        return (is_numeric($value) ? (int) $value : $value);
     }
 
     /**
@@ -1559,11 +1574,6 @@ class Valigator
         return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
     }
 
-    protected function sanitize_casttonumeric($value, $args = NULL)
-    {
-        return (is_numeric($value) ? (int) $value : $value);
-    }
-
     /**
      * Sanitize the string by removing any script tags.
      *
@@ -1607,6 +1617,21 @@ class Valigator
     protected function sanitize_uppercase($value, $args = NULL)
     {
         return strtoupper($value);
+    }
+
+    /**
+     * Sanitize the string by urlencoding characters.
+     *
+     * Usage: '<index>' => 'urlencode'
+     *
+     * @param string $value
+     * @param array  $args
+     *
+     * @return string
+     */
+    protected function sanitize_urlencode($value, $args = NULL)
+    {
+        return filter_var($value, FILTER_SANITIZE_ENCODED);
     }
 
     /**
@@ -1926,7 +1951,7 @@ class Valigator
     /**
      * Verify that a value is contained within the pre-defined value set.
      *
-     * Usage: '<index>' => 'inlist:value,value,value'
+     * Usage: '<index>' => 'inlistci:value,value,value'
      *
      * @param string $field
      * @param array  $input
@@ -1934,9 +1959,17 @@ class Valigator
      *
      * @return mixed
      */
-    protected function validate_inlist($value, $args = NULL)
+    protected function validate_inlistci($value, $args = NULL)
     {
+        $args = array_map(function($string) {
+                    return strtolower($string);
+                }, $args);
         return (in_array(trim(strtolower($value)), $args));
+    }
+
+    protected function validate_inlistcs($value, $args = NULL)
+    {
+        return (in_array(trim($value), $args));
     }
 
     /**
@@ -2136,16 +2169,24 @@ class Valigator
      * Verify that a value is NOT contained within the pre-defined value set.
      * OUTPUT: will NOT show the list of values.
      *
-     * Usage: '<index>' => 'doesnt_contain_list,value;value;value'
+     * Usage: '<index>' => 'notinlistci,value;value;value'
      *
      * @param string $field
      * @param array  $input
      *
      * @return mixed
      */
-    protected function validate_notinlist($value, $args = NULL)
+    protected function validate_notinlistci($value, $args = NULL)
     {
+        $args = array_map(function($string) {
+                    return strtolower($string);
+                }, $args);
         return (!in_array(trim(strtolower($value)), $args));
+    }
+
+    protected function validate_notinlistcs($value, $args = NULL)
+    {
+        return (!in_array(trim($value), $args));
     }
 
     /**
@@ -2323,22 +2364,6 @@ class Valigator
     protected function validate_url($value, $args = NULL)
     {
         return (filter_var($value, FILTER_VALIDATE_URL) !== FALSE);
-    }
-
-    /**
-     * Determine if a URL exists & is accessible.
-     *
-     * Usage: '<index>' => 'url_exists'
-     *
-     * @param string $field
-     * @param array  $input
-     * @param null   $args
-     *
-     * @return mixed
-     */
-    public function version()
-    {
-        return self::VERSION;
     }
 
     /**
