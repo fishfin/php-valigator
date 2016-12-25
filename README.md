@@ -56,7 +56,8 @@ Its easier to proceed from here with an example. Lets say we want to validate th
  * loginId: required and must be an email ID
  * name: required and must be a name
  * creditCardNumber: not mandatory, but if provided must be a valid credit card number
- * addressPINCode: not mandatory, but if provided must be a 6-digit number
+ * billAddressPINCode: not mandatory, but if provided must be a 6-digit number
+ * shipAddressPINCode: not mandatory, but if provided must be a 6-digit number
 
 Yes, you noticed it, camelCase is just my preference.
 
@@ -69,7 +70,8 @@ $inputData = [
   'loginId' => '',                                     // invalid data as it is empty
                                                        // notice that 'name' is missing
   'creditCardNumber' => '0001-0001-0001-ABCD',         // not a valid credit card number
-                                                       // notice that 'addressPINCode' is missing
+                                                       // notice that 'billAddressPINCode' is missing
+                                                       // notice that 'shipAddressPINCode' is missing
 ];
 ```
 Lets now create filters based on the data validation requirements we have, and add a few other useful things. Please read Important Notes in the code comments.
@@ -90,7 +92,8 @@ $myFilters = [
     'sanitizations' => 'trim|numeric',                 // multiple sanitization filters
     'validations' => 'creditcard',                     // if present, must be credit card number
   ],
-  'addressPINCode:"Indian PIN Code"' => [              // overrides default 'Address PIN Code'
+  'billAddressPINCode:"PIN Code (Billing)"|shipAddressPINCode:"PIN Code (Shipping)"' => [
+                                                       // overrides default labels for Address PIN Codes
                                                        // no sanitization filters here
     'validations' => 'numeric|exactlen:6',             // if present, must be numeric of exactly 6
                                                        // characters length
@@ -98,25 +101,27 @@ $myFilters = [
 ];
 
 // Important Notes:
-//  1. 'loginId', 'name', 'creditCardNumber' and 'addressPINCode' are our **fields** of
-//     interest
+//  1. 'loginId', 'name', 'creditCardNumber', 'billAddressPINCode' and 'shipAddressPINCode' are our
+//     **fields** of interest
 //  2. Field names are case-sensitive: 'loginId' is not the same as 'loginid'
-//  3. Important understanding about filters:
+//  3. Fields running  same sanitizations and validations need not be listed separately, they can
+//     be concatenated together with the pipe (|) delimiter
+//  4. Important understanding about filters:
 //     a. Sanitization filters will modify input, and will never emit errors
 //     b. Validation filters will never modify input, but can emit errors
-//  4. The order of running filters is as follows:
-//     a. All sanitizations first (if they exist) in order: 'loginId' to 'addressPINCode'
-//     b. Then all validations (if they exist) in order:  'loginId' to 'addressPINCode'
-//  5. If there are validation errors, they will be reported in exactly the same order, so
+//  5. The order of running filters is as follows:
+//     a. All sanitizations first (if they exist) in order: 'loginId' to 'billAddressPINCode'
+//     b. Then all validations (if they exist) in order:  'loginId' to 'billAddressPINCode'
+//  6. If there are validation errors, they will be reported in exactly the same order, so
 //     if you want some errors to be reported higher than the others, place the field higher
-//  6. You can use the following keywords interchangeably, whatever makes you comfortable:
+//  7. You can use the following keywords interchangeably, whatever makes you comfortable:
 //     a. 'sanitization' <=> 'sanitizations'
 //     b. 'validation' <=> 'validations'
-//  7. Multiple filters can be set for each field, for sanitizations or validations, the
+//  8. Multiple filters can be set for each field, for sanitizations or validations, the
 //     delimiter is '|'. Filters are run in the same order from left to right. Output of first
 //     sanitization filter is passed to the second one, output of second to the third and so on.
 //     Output of sanitization is sent to validation filters.
-//  8. For most validation filters except 'required', if input is absent or empty, validation
+//  9. For most validation filters except 'required', if input is absent or empty, validation
 //     will pass. Simply add 'required' filter to the beginning of validation filters if the
 //     value must be present.
 ```
@@ -154,7 +159,8 @@ $inputData = [
   'loginId' => 'user',                                 // still not okay, not an email
   'name' => 'Ruskin Bond 5',                           // what's a numeric doing in a name?
   'creditCardNumber' => '0001-0001-0001-0001',         // does not satisfy credit card last digit logic
-  'addressPINCode' => 'A123456',                       // not a numeric, not 6 digits
+  'billAddressPINCode' => 'A123456',                   // not a numeric, not 6 digits
+  'shipAddressPINCode' => '987654',                    // looks good
 ];
 
 $myValigator = new \Fishfin\Valigator($myFilters);     // block start
@@ -174,8 +180,8 @@ if ($validationResults === FALSE) {
 //   ["Retail User ID is not a valid email address",
 //    "Full Name does not seem to contain a person's name",
 //    "Credit Card Number does not contain a valid credit card number",
-//    "Indian PIN Code may only contain numeric characters",
-//    "Indian PIN Code must be exactly 6 characters long"]
+//    "PIN Code (Billing) may only contain numeric characters",
+//    "PIN Code (Billing) must be exactly 6 characters long"]
 // Nice, yeah?
 ```
 Time for iteration 3:
@@ -188,14 +194,15 @@ $inputData = [
   'name' => 'Ruskin Bond ',                            // notice additional blank at the end
   'creditCardNumber' => '4111=1111=1111=1111',         // is actually a valid sample Visa CC number
                                                        // notice '=' symbol instead of hyphens or blanks
-  'addressPINCode' => '1234567',                       // not 6 digits
+  'billAddressPINCode' => '1234567',                   // not 6 digits
+  'shipAddressPINCode' => '987654',                    // is good
 ];
 
 // Results:
 // $validationResults:
 //   FALSE
 // $myValidationErrorsArray:
-//   ["Indian PIN Code must be exactly 6 characters long"]
+//   ["PIN Code (Billing) must be exactly 6 characters long"]
 // No error on credit card number, because it was sanitized for numbers! More on this later.
 ```
 
@@ -208,7 +215,8 @@ $inputData = [
   'loginId' => 'user@example.com',
   'name' => 'Ruskin Bond ',
   'creditCardNumber' => '4111=1111=1111=1111',
-  'addressPINCode' => '123456',                        // looks good now
+  'billAddressPINCode' => '123456',                    // looks good now
+  'shipAddressPINCode' => '987654',
 ];
 
 // Results:
@@ -219,7 +227,8 @@ $inputData = [
 //    "loginId":"user@example.com",
 //    "name":"Ruskin Bond",
 //    "creditCardNumber":"4111111111111111",
-//    "addressPINCode":"123456"}
+//    "billAddressPINCode":"123456",
+//    "shipAddressPINCode":"987654"}
 // Did you notice the name was sanitized by removing leading and trailing blanks? That was because
 // of the 'trim' sanitization. Notice how '=' was removed because of the 'numeric' sanitization.
 // All validations passed this time, phew!
