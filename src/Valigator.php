@@ -659,9 +659,9 @@ class Valigator
 
         if ($parentageExists && is_array($rollingInput)) {
             if (array_key_exists($this->_filters[$field]['field'], $rollingInput)) {
-                if (!is_array($rollingInput[$this->_filters[$field]['field']])) {
+                //if (!is_array($rollingInput[$this->_filters[$field]['field']])) {
                     $fieldValue = &$rollingInput[$this->_filters[$field]['field']];
-                }
+                //}
             } else if ($autoAddParentage) {
                 $fieldValue = &$rollingInput[$this->_filters[$field]['field']];
                 $fieldValue = '';
@@ -1273,7 +1273,7 @@ class Valigator
                     $method = "sanitize_{$filterSynonym}";
                     $fieldValue = &$this->_getFieldValueFromInput($field, $input, TRUE);
                     $fieldValue = $this->$method($fieldValue, $argsSynonyms);
-                } else if ($fieldValue !== NULL) {
+                } else if ($fieldValue !== NULL && !is_array($fieldValue)) {
                     switch (TRUE) {
                         case (isset($this->_customSanitizations[$filter])):
                             $fieldValue = call_user_func($this->_customSanitizations[$filter]
@@ -1364,6 +1364,8 @@ class Valigator
                         $validationErrorMsg[] =
                                 $this->_getValidationErrorMsg($filter);
                     }
+                } else if (is_array($fieldValue)) {
+                    $validationPassed = FALSE;
                 } else if ($fieldValue === NULL) {
                     $validationPassed = TRUE;
                 } else {
@@ -1454,7 +1456,7 @@ class Valigator
      */
     protected function sanitize_default($value, $args = NULL)
     {
-        return ($value === NULL || $value === '') ? $args[0] : $value;
+        return ($value === NULL || $value === ''  || $value === array()) ? $args[0] : $value;
     }
 
     /**
