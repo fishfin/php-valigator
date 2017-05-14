@@ -38,6 +38,7 @@ class Valigator
         'bool' => 'boolean',
         'casttonum' => 'casttonumeric',
         'casttonumber' => 'casttonumeric',
+        'defaultphp' => 'defaultspecial',
         'encode_amp' => FILTER_FLAG_ENCODE_AMP,
         'encode_high' => FILTER_FLAG_ENCODE_HIGH,
         'encode_low' => FILTER_FLAG_ENCODE_LOW,
@@ -1269,7 +1270,7 @@ class Valigator
                     }
                 }
 
-                if ($filterSynonym == 'default') {
+                if (in_array($filterSynonym, ['default', 'defaultspecial'])) {
                     $method = "sanitize_{$filterSynonym}";
                     $fieldValue = &$this->_getFieldValueFromInput($field, $input, TRUE);
                     $fieldValue = $this->$method($fieldValue, $argsSynonyms);
@@ -1457,6 +1458,24 @@ class Valigator
     protected function sanitize_default($value, $args = NULL)
     {
         return ($value === NULL || $value === ''  || $value === array()) ? $args[0] : $value;
+    }
+
+    protected function sanitize_defaultspecial($value, $args = NULL)
+    {
+        if ($value === NULL || $value === ''  || $value === array()) {
+            switch (strtolower($args[0])) {
+                case 'null':
+                    $value = NULL;
+                    break;
+                case 'array()':
+                case '[]':
+                    $value = array();
+                    break;
+                default:
+                    $value = $args[0];
+            }
+        }
+        return $value;
     }
 
     /**
