@@ -5,13 +5,13 @@ Lovers of minimalism, rejoice! Valigator is a stand-alone PHP class for data san
 PHP API frameworks are picking up, fast. They are wonderfully minimalist, speedy, and vastly preferred over powerful yet sometimes clunky larger frameworks. To implement validations in API frameworks and projects, large vendor sources have to be installed, adding unnecessary additions to code-base and complexity. Valigator was created to address specifically that. And there's nothing that stops you from using Valigator in non-API projects. Go ahead, you'll love it!
 
 #####    Valigator Checklist:
-      ✓ PHP (5.5.*, 5.6.*, 7.*)
-      ✓ Simple
-      ✓ Flexible
+      ✓ PHP (5.5.*, 5.6.*, 7.0.*, 7.1.*)
       ✓ Stand-alone
-      ✓ Programmer-friendly
       ✓ Data Sanitization
       ✓ Data Validation
+      ✓ Simple
+      ✓ Flexible
+      ✓ Programmer-friendly
 
 PS: Slim Framework 3 is awesome!
 
