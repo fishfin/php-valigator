@@ -7,7 +7,7 @@ namespace Fishfin;
  *
  * @author      fishfin
  * @link        http://aalapshah.in
- * @version     1.0.1
+ * @version     1.0.2
  * @license     MIT
  * 
  * Valigator is a standalone PHP sanitization and validation class that does not
