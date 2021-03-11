@@ -6,7 +6,7 @@
     "homepage": "https://github.com/fishfin/php-valigator",
     "license": "MIT",
     "require": {
-        "php": "5.5.* || 5.6.* || 7.0.* || 7.1.*"
+        "php": "5.5.* || 5.6.* || 7.*"
     },
     "autoload": {
         "psr-4": {
